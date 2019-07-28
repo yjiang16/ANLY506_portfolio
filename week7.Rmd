@@ -1,0 +1,212 @@
+---
+title: "Week7_Practice_Visualization"
+author: "yjiang"
+date: "6/25/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r include=FALSE}
+# Install and Load library
+library("tidyverse")
+
+```
+
+```{r}
+# Check the basic function
+mpg
+
+# Create a ggplot
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy))
+
+```
+```{r eval=FALSE}
+### test
+ggplot(data = < mpg >) +
+  <GEOM_FUNCTION>(mapping = aes(<MAPPINGS>))  ## didn't work
+
+```
+```{r}
+# Create ggplot with color
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy, color = class))
+
+# Create scaling ggplot
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy, size = class, color = class))   # Using size for a discrete variable is not advised.
+
+# Try alpha and shape
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy, alpha = class))
+
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy, shape = class))
+
+
+
+```
+```{r}
+# Try facets
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy)) +
+  facet_wrap(~ class, nrow = 3)
+
+# Try facets by grid 
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy)) +
+  facet_grid(drv ~ cyl)
+
+
+```
+```{r}
+# Compare smooth and points
+ggplot(data = mpg) +
+  geom_smooth(mapping = aes(x = displ, y = hwy)) 
+
+# Add linetype
+ggplot(data = mpg) +
+  geom_smooth(mapping = aes(x = displ, y = hwy, linetype = drv))
+
+# Add color    
+ggplot(data = mpg) +
+  geom_smooth(
+    mapping = aes(x = displ, y = hwy, color = drv),
+    show.legend = FALSE)
+
+# Combint points and smooth
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
+  geom_point(mapping = aes(color = class)) + 
+  geom_smooth()
+
+# Try subcompact
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
+  geom_point(mapping = aes(color = class)) + 
+  geom_smooth(data = filter(mpg, class == "subcompact"), se = FALSE)
+
+
+```
+```{r}
+# Try bar of ggplot
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut))
+        # or
+ggplot(data = diamonds) + 
+  stat_count(mapping = aes(x = cut))
+
+## Change the order/number of the bar
+demo <- tribble(
+  ~cut,         ~freq,
+  "Good",       8206,
+  "Very Good",  3082,
+  "Premium",    5791,
+  "Ideal",      3051,
+  "Fair",       40510
+)
+
+ggplot(data = demo) +
+  geom_bar(mapping = aes(x = cut, y = freq), stat = "identity")
+
+
+```
+```{r}
+# Try the y value only diagram
+ggplot(data = diamonds) + 
+  stat_summary(
+    mapping = aes(x = cut, y = depth),
+    fun.ymin = min,
+    fun.ymax = max,
+    fun.y = median)
+
+```
+```{r}
+# Position adjustment
+## Try color on bar diagram
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, colour = cut))
+
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, fill = cut))
+
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, fill = clarity))
+
+ggplot(data = diamonds, mapping = aes(x = cut, fill = clarity)) + 
+  geom_bar(alpha = 1/5, position = "identity")
+
+ggplot(data = diamonds, mapping = aes(x = cut, colour = clarity)) + 
+  geom_bar(fill = NA, position = "identity")
+
+## Dodge the data with color
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, fill = clarity), position = "dodge")
+
+```
+```{r}
+# Coordinate 
+## Try boxplot
+ggplot(data = mpg, mapping = aes(x = class, y = hwy)) + 
+  geom_boxplot()
+
+ggplot(data = mpg, mapping = aes(x = class, y = hwy)) + 
+  geom_boxplot() +
+  coord_flip()
+
+## Try map
+### install and load library
+installed.packages("maps")
+library("maps")
+
+nz <- map_data("nz")
+
+ggplot(nz, aes(long, lat, group = group)) +
+  geom_polygon(fill = "white", colour = "black")
+
+ggplot(nz, aes(long, lat, group = group)) +
+  geom_polygon(fill = "white", colour = "black") +
+  coord_quickmap()
+
+## Try polar coordinates
+bar <- ggplot(data = diamonds) + 
+  geom_bar(
+    mapping = aes(x = cut, fill = cut), 
+    show.legend = FALSE,
+    width = 1) + 
+  theme(aspect.ratio = 1) +
+  labs(x = NULL, y = NULL)
+
+bar + coord_flip()
+bar + coord_polar()
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

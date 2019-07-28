@@ -1,0 +1,141 @@
+---
+title: "week11_Practice_PCA"
+author: "yjiang"
+date: "7/19/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r }
+# Install and load libraries
+installed.packages("devtools")
+library(devtools)
+
+install_github("vqv/ggbiplot")
+library(ggbiplot)
+library(datasets)
+
+install.packages("corrplot")
+library(corrplot)
+
+install.packages("Hmisc")
+library(Hmisc)
+
+```
+```{r}
+# Create scatterplots to check pair linear relationship
+## Load the data mtcars
+data("mtcars")
+my_data1 <- mtcars[, c(1, 2, 4, 5, 6, 8)]
+
+## Print the first 5 rows
+head(my_data1, 5)
+
+## Print the result
+pairs(my_data1, cex.labels = 2, font.labels = 1)
+
+# Pearson
+cor(my_data1, use = "complete.obs")
+res <- cor(my_data1, method = c("pearson", "kendall", "spearman"))
+
+## Print the result
+corrplot(res, type = "upper", order = "hclust",
+         tl.col = "red", tl.srt = 45)
+
+## Add p-value
+res2 <- rcorr(as.matrix(my_data1))
+res2$r
+res2$P   # Extract p-values
+
+corrplot(res2$r, type="upper", order="hclust",
+         p.mat = res2$P, sig.level = 0.01, insig = "blank")    # Insignificant correlations are leaved blank
+
+
+```
+```{r}
+# Try the PCA
+## Determine a pca data
+mtcars.pca <- prcomp(mtcars[,c(1:5,8,9)], center = TRUE,scale. = TRUE)
+
+### Check the summary of it
+summary(mtcars.pca)
+
+## Print the ggbiplot
+ggbiplot(mtcars.pca)
+
+## Name the points
+ggbiplot(mtcars.pca, labels=rownames(mtcars))
+
+# Interpret the result
+## Group Japan, Us, and Eu in different color PC1&PC2
+mtcars.country <- c(rep("Japan", 3), rep("US",4), rep("Europe", 7),rep("US",3), "Europe", rep("Japan", 3), rep("US",4), rep("Europe", 3), "US", rep("Europe", 3))
+
+ggbiplot(mtcars.pca,ellipse=TRUE,  labels=rownames(mtcars), groups=mtcars.country)
+
+## Check PC3&PC4
+ggbiplot(mtcars.pca,ellipse=TRUE,choices=c(3,4),   labels=rownames(mtcars), groups=mtcars.country)
+
+# Try add a circle in the center
+ggbiplot(mtcars.pca,ellipse=TRUE,circle=TRUE, labels=rownames(mtcars), groups=mtcars.country)
+
+#Try scale the sample
+ggbiplot(mtcars.pca,ellipse=TRUE,obs.scale = 2, var.scale = 0.5,  labels=rownames(mtcars), groups=mtcars.country)
+
+# Try remove the arrow
+ggbiplot(mtcars.pca,ellipse=TRUE,var.axes=FALSE,   
+         labels=rownames(mtcars), groups=mtcars.country)
+
+
+```
+```{r}
+# Add a new sample
+## Determine the spacecar
+spacecar <- c(1000,60,50,500,0,0.5,2.5,0,1,0,0)
+
+mtcarsplus <- rbind(mtcars, spacecar)
+mtcars.countryplus <- c(mtcars.country, "Jupiter")
+
+## Set the pca for mtcarplus
+mtcarsplus.pca <- prcomp(mtcarsplus[,c(1:5,8,9)], center = TRUE,scale. = TRUE)
+
+## Print the result
+ggbiplot(mtcarsplus.pca, obs.scale = 2, var.scale = 1, ellipse = TRUE, circle = FALSE, var.axes=TRUE, labels=c(rownames(mtcars), "spacecar"), groups=mtcars.countryplus)+
+  scale_colour_manual(name="Origin", values= c("forest green", "red", "violet", "dark blue"))+
+  ggtitle("PCA of mtcars dataset, with extra sample added")+
+  theme_minimal()+
+  theme(legend.position = "bottom")
+      # to see which country the car is from
+
+# Add new sample to the old PCA
+## Determine s.sc and s.pred
+s.sc <- scale(t(spacecar[c(1:5,8,9)]), center= mtcars.pca$center)
+s.pred <- s.sc %*% mtcars.pca$rotation
+
+## Set the new pca data
+mtcars.plusproj.pca <- mtcars.pca
+mtcars.plusproj.pca$x <- rbind(mtcars.plusproj.pca$x, s.pred)
+
+## Print the result
+ggbiplot(mtcars.plusproj.pca, obs.scale = 1, var.scale = 2, ellipse = TRUE, circle = FALSE, var.axes=TRUE, labels=c(rownames(mtcars), "spacecar"), groups=mtcars.countryplus)+
+  scale_colour_manual(name="Origin", values= c("forest green", "red", "violet", "dark blue"))+
+  ggtitle("PCA of mtcars dataset, with extra sample projected")+
+  theme_minimal()+
+  theme(legend.position = "bottom")
+
+```
+```{r}
+# Try biplot
+biplot(mtcars.pca,scale=1, cex=0.8)
+
+```
+
+
+
+
+
+
+

@@ -1,0 +1,88 @@
+---
+title: "week9_Practice_Visualization"
+author: "yjiang"
+date: "7/07/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r }
+# Base plotting system
+## Try a scatterplot to see the trend with airquality dataset
+data(airquality)
+with(airquality, {
+         plot(Temp, Ozone)
+         lines(loess.smooth(Temp, Ozone)) })
+
+```
+```{r}
+# Lattice System
+## Load the library
+library(lattice)
+
+# Try a lattice plot with the relationship between life expectancy and income
+state <- data.frame(state.x77, region = state.region)
+xyplot(Life.Exp ~ Income | region, data = state, layout = c(4, 1))
+
+```
+```{r}
+# Create a plot
+## Make plot appear on screen device
+with(faithful, plot(eruptions, waiting)) 
+
+## Name a title
+title(main = "A plot title")  
+
+```
+```{r}
+# Copy plots
+## Load the library
+library(datasets)
+
+## Create a plot
+with(faithful, plot(eruptions, waiting)) 
+title(main = "A plot title")  
+
+## Copy the plot to a PNG file
+dev.copy(png, file = "testing.png")  
+
+## Close the PNG
+dev.off()
+
+
+```
+```{r}
+# Data Sampling
+## Create a clean sample
+sample(1:500, 10)
+
+## seed value
+set.seed(211)
+
+## extract rows from a mtcars dataset
+set.seed(123)
+index<-sample(1:nrow(mtcars), 5)
+mtcars[index,]
+
+### Class practice
+library(dplyr)
+set.seed(1)
+sample_iris <- iris %>%
+  group_by(Species) %>%
+  sample_n(10)
+
+```
+
+
+
+
+
+
+
+
+
+

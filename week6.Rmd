@@ -1,0 +1,242 @@
+---
+title: "week6_Practice_Visualization"
+author: "yjiang"
+date: "6/17/2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r include=FALSE}
+# Data transformation
+# Load the library
+
+library(rmarkdown)
+library(ggplot2)
+library(tidyverse)
+library(nycflights13)
+```
+
+
+
+```{r }
+# Check the data
+flights
+
+# Flight information on Jan 01
+filter(flights, month == 1, day == 1)
+
+```
+
+```{r eval = FALSE}
+sqrt(9) ^ 2 == 3
+
+# Filter rows
+oct_nov <- filter(flights, month %in% c(10,11))
+
+# Filter the arrival (or departure) delay by more than 60 mins
+filter(flights, arr_delay <= 60, dep_delay <= 60)
+
+# or
+filter(flights, !(arr_delay > 60 | dep_delay >60))
+
+```
+```{r }
+# Arrange rows
+arrange(flights, year, month, day)
+
+## Descending order
+arrange(flights, desc(arr_delay))
+
+## Move missing values to the end
+df <- tibble(x = c(6, 3, NA))
+arrange(df, x)
+
+arrange(df, desc(x))
+
+# Select columns
+select(flights, year, month, day)
+## or
+select(flights, year:day)
+## select others
+select(flights, -(year:day))
+## selece arrival data
+select(flights, starts_with("arr"))     # end_with("123"); contains("123")
+
+
+```
+```{r}
+# Add new variables
+flights_sml <- select(flights,
+                      year:day,
+                      ends_with("delay"),
+                      distance,
+                      air_time)
+mutate(flights_sml,
+       gain = dep_delay - arr_delay,
+       speed = distance / air_time *120)
+
+# Refer to new columns
+mutate(flights_sml,
+       gain = dep_delay - arr_delay,
+       hours = air_time / 120,
+       gain_per_hour = gain / hours)
+
+# Only keep the new variables
+transmute(flights,
+       gain = dep_delay - arr_delay,
+       hours = air_time / 120,
+       gain_per_hour = gain / hours)
+
+
+```
+```{r}
+# Offset the data 
+(x <- 1:15)
+ 
+lag(x)
+lead(x)
+x - lag(x)
+
+# Cumulative and rolling aggregates
+cumsum(x)
+cummean(x)
+
+# Ranking
+y <- c(1, 2, 2, NA, 3, 4, 4, 5)
+min_rank(y)
+min_rank(desc(y))
+
+row_number(y)
+dense_rank(y)
+percent_rank(y)
+cume_dist(y)
+
+
+```
+```{r}
+# Group the data & Visualization
+## Make data frame to a row
+summarise(flights, delay = mean(dep_delay, na.rm = TRUE))
+
+## Get the delat per date
+by_date <- group_by(flights, year, month, day)
+summarise(by_date, delay = mean(dep_delay, na.rm = TRUE))
+
+## Combine operations with pipe
+by_dest <- group_by(flights, dest)
+delay <- summarise(by_dest,
+                   count = n(),
+                   dist = mean(distance, na.rm = TRUE),
+                   delay = mean(arr_delay, na.rm = TRUE))
+delay <- filter(delay, count > 20, dest != "HNL")
+
+## Create diagram
+ggplot(data = delay, mapping = aes(x = dist, y = delay)) +
+  geom_point(aes(size = count), alpha = 1/2) +
+  geom_smooth(se = FALSE)
+
+
+
+```
+
+```{r}
+# Counts
+## determine the flights not cancelled
+not_cancelled <- flights %>%
+  filter(!is.na(arr_delay), !is.na(dep_delay))
+
+not_cancelled %>%
+  group_by(year, month, day) %>%
+  summarise(mean = mean(dep_delay))
+
+## Create the delay counts_Visualization
+delays <- not_cancelled %>%
+  group_by(tailnum) %>%
+  summarise(delay = mean(arr_delay))
+
+ggplot(data = delays, mapping = aes(x = delay)) +
+  geom_freqpoly(binwidth = 2)
+
+
+
+```
+
+```{r}
+# Visualization
+delays <- not_cancelled %>%
+  group_by(tailnum) %>%
+             summarise(
+               delay = mean(arr_delay, na.rm = TRUE),
+                       n = n())
+
+ggplot(data = delays, mapping = aes(x = n, y = delay)) +
+  geom_point(alpha = 1/20)
+  
+delays %>%
+  filter(n > 25) %>%
+  ggplot(mapping = aes(x = n, y = delay)) +
+  geom_point(alpha = 1/10)
+
+
+```
+```{r}
+# Wrangling
+## Summary *average positive delay
+not_cancelled %>%
+  group_by(year, month, day) %>%
+  summarise(avg_delay1 = mean(arr_delay),
+            avg_delay2 = mean(arr_delay[arr_delay > 0]))
+
+## Distance to destinations
+not_cancelled %>%
+  group_by(dest) %>%
+  summarise(distance_sd = sd(distance)) %>%
+  arrange(desc(distance_sd))
+
+## When do the first and last flights leave each day?
+not_cancelled %>%
+  group_by(year, month, day) %>%
+  summarise(
+    first = min(dep_time),
+    last = max(dep_time)
+  )
+
+
+```
+```{r}
+## Group by multiple variables
+daily <- group_by(flights, year, month, day)
+(per_day <- summarise(daily, flights = n()))
+
+(per_month <- summarise(per_day, flights = sum(flights)))
+
+(per_day <- summarise(per_month, flights = sum(flights)))
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
